@@ -1,66 +1,27 @@
-## Foundry
+# Dynamic Gas Fee Hook
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Core concept
+When we change dynamic fees, we are actually changing the LP fees charged and paid to the LP. 
+We are not changing the Protocol fees and the custom fee that we pay for the individual hook. 
 
-Foundry consists of:
+## Overview
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Mechanism Design
 
-## Documentation
+## Assumptions
+1. We are using `movingAverageGapPrice` to track the changes in gas fee. BUT this variable tracks the gasFees only on transaction done on this pool and does not consider transactions done outside this pool. 
 
-https://book.getfoundry.sh/
+2. We are tracking changes in the gasPrice, only duing `afterSwap`. To get the most accurate gasPrice updates based on the txs happening in this pool, we need to enable all the hooks and track the gasPrice throughout the lifecycle of the pool.
 
-## Usage
+## Potential Improvements
+1. Update `movingAverageGasPrice` by tracking gasPrice throughout the lifecycle of the pool. 
 
-### Build
 
-```shell
-$ forge build
-```
+## Workflow
+Initially the gas price is the base fee
 
-### Test
+Before the first swap, the dynamic fee is the base fee
+and after the first swap, the movingAverageFee and the movingAverageCount gets updated
 
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+As more Tx happen, the movingAverageCount gets updated, beforeSwap increases the fee and swap fee gets updated.
+after the swap is done, the movingAverageFee and movingAverageCount is updated
